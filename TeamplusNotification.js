@@ -4,10 +4,9 @@
 // @version      0.1
 // @description  Show Team+ Notification by browser
 // @author       joysrr
-// @match        http://tp.cht-pt.com.tw/*
+// @match        請輸入自己的Team+網站(ex. http://tp.xxx.com.tw/*)
 // @grant        none
 // ==/UserScript==
-
 (function() {
     'use strict';
     if (('Notification' in window)) {
@@ -36,7 +35,8 @@
         }, 10000)
     }
 
-    function showNotify(unread = '*', tag = 'default'){
+    // url要替換成自己Team+訊息的網址喔~
+    function showNotify(unread = '*', tag = 'default', url='http://tp.xxx.com.tw/EIM/Chat/ChatMain.aspx'){
         // 使用者同意授權
         Notification.requestPermission(function(permission) {
             if (permission === 'granted') {
@@ -48,7 +48,7 @@
                     renotify: true, // 重新通知
                 }).onclick = function(e) { // 點擊
                     e.preventDefault();
-                    window.open('http://tp.cht-pt.com.tw/EIM/Chat/ChatMain.aspx'); // 打開Team+訊息視窗
+                    window.open(url); // 打開Team+訊息視窗
                 };
             }
         });
