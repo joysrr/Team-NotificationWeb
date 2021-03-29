@@ -9,8 +9,12 @@
 // ==/UserScript==
 (function() {
     'use strict';
-    let unreadcount = 0,
-        title = '';
+
+    // 黑名單不顯示
+    let bList = ['訊息情報'];
+
+    let nList = [];
+    let unreadcount = 0, title = '', msgContent = '', msgDate = '';
     setInterval(() => {
         // 當頁面不在前台時才跳出通知
         if (checkNotifyOn() && document.visibilityState === 'hidden') {
@@ -21,7 +25,11 @@
                 unreadList.forEach(unread => {
                     unreadcount = unread.innerText;
                     title = unread.parentElement.querySelector('.chatName').title;
-                    showNotify(unreadcount, title);
+                    msgContent = unread.parentElement.querySelector('.content').innerText;
+                    msgDate = unread.parentElement.querySelector('.sendTime').innerText;
+                    if(checkNotifyCanPost(title)){
+                        nList.push(showNotify(unreadcount, title, `${msgContent}\n${msgDate}`));
+                    }
                 })
             } else {
                 // other page
@@ -29,13 +37,26 @@
                 for (let i = 0; i < notice.length; i++) {
                     unreadcount = parseInt(notice[i].innerText);
                     if (unreadcount > 0) {
-                        showNotify(unreadcount);
+                        if(checkNotifyCanPost('Team+Notification')){
+                            nList.push(showNotify(unreadcount));
+                        }
                         break;
                     }
                 }
             }
         }
-    }, 8000)
+    }, 10000)
+
+    // close all notification when visible
+    document.addEventListener('visibilitychange', function() {
+        if (document.visibilityState === 'visible') {
+            nList.forEach(n=>n.close());
+        }
+    });
+
+    function checkNotifyCanPost(tag){
+        return !bList.includes(tag) && !nList.some(n=>n.tag === tag);
+    }
 
     function checkNotifyOn() {
         if (window.Notification && Notification.permission === "granted") {
@@ -61,15 +82,22 @@
     }
 
     // url要替換成自己Team+訊息的網址喔~
-    function showNotify(unread = '*', tag = 'Team+Notification', url = 'http://tp.xxx.com.tw/EIM/Chat/ChatMain.aspx') {
+    function showNotify(unread = '*', tag = 'Team+Notification', content = '', url = 'http://tp.xxx.com.tw/EIM/Chat/ChatMain.aspx') {
         var notification = new Notification(`Team+[${tag=='Team+Notification'?unread:tag}]`, {
-            body: `您有${unread}則新的訊息，請回覆!`, // 設定內容
+            body: `您有${unread}則新的訊息，請回覆!${content===''?'':'\n'+content}`, // 設定內容
             icon: '../Images/chatsbg.png', // 設定 icon
             tag: tag, // 標籤
             renotify: true, // 重新通知
-        }).onclick = function(e) { // 點擊
+            requireInteraction: true, // 持續顯示
+        });
+
+        notification.onclick = function(e) { // 點擊
             e.preventDefault();
             window.open(url); // 打開Team+訊息視窗
+        };
+
+        notification.onclose = function(e){ // 關閉
+            nList.remove(e.target);
         };
 
         return notification;
