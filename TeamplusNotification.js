@@ -55,7 +55,7 @@
     });
 
     function checkNotifyCanPost(tag){
-        return !bList.includes(tag) && !nList.some(n=>n.tag === tag);
+        return !bList.some(b=>tag.includes(b)) && !nList.some(n=>n.tag === tag);
     }
 
     function checkNotifyOn() {
